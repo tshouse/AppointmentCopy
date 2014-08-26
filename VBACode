@@ -1,0 +1,88 @@
+Sub CreateMeetingCopy()
+
+'=================================================================
+'Description: Outlook macro to create a new meeting request with
+'             specific details of the currently selected
+'             meeting and send a copy to another email
+'
+' author : Robert Sparnaaij and Tucker Shouse
+' version: 2.o
+' original source website: http://www.howto-outlook.com/howto/openapptcopy.htm
+'=================================================================
+
+    Dim objOL As Outlook.Application
+    Dim objSelection As Outlook.Selection
+    Dim objItem As Object
+    Set objOL = Outlook.Application
+    
+    'Get the selected item
+    Select Case TypeName(objOL.ActiveWindow)
+        Case "Explorer"
+            Set objSelection = objOL.ActiveExplorer.Selection
+            If objSelection.Count > 0 Then
+                Set objItem = objSelection.Item(1)
+            Else
+                Result = MsgBox("No item selected. " & _
+                            "Please make a selection first.", _
+                            vbCritical, "OpenAppointmentCopy")
+                Exit Sub
+            End If
+        
+        Case "Inspector"
+            Set objItem = objOL.ActiveInspector.CurrentItem
+            
+        Case Else
+            Result = MsgBox("Unsupported Window type." & _
+                        vbNewLine & "Please make a selection" & _
+                        "in the Calendar or open an item first.", _
+                        vbCritical, "OpenAppointmentCopy")
+            Exit Sub
+    End Select
+
+    Dim olAppt As Outlook.AppointmentItem
+    Dim olApptCopy As Outlook.AppointmentItem
+    Set olApptCopy = Outlook.CreateItem(olAppointmentItem)
+        
+    'Copy the desired details to a new appointment item
+    If objItem.Class = olAppointment Then
+        Set olAppt = objItem
+        
+        
+        With olApptCopy
+            .Subject = olAppt.Subject
+            .Location = olAppt.Location
+            .Body = olAppt.Body
+            .Categories = olAppt.Categories
+            .AllDayEvent = olAppt.AllDayEvent
+            .Start = olAppt.Start
+            .End = olAppt.End
+            .StartTimeZone = olAppt.StartTimeZone
+            .Categories = "Backup" 'set the category within your outlook to distinguish the copy
+            .MeetingStatus = olMeeting 'outlook requires this to convert it from an appointment to a meeting
+            .Recipients.Add ("youremail@gmail.com") 'enter your email here
+            .ResponseRequested = False 'do not require a response
+            .Send 'autosend the invite
+           
+            
+        End With
+        
+        
+        'Unhedit the comment below to Display the copy
+        'olApptCopy.Display
+    
+    'Selected item isn't an appointment item
+    Else
+        Result = MsgBox("No appointment item selected. " & _
+                    "Please make a selection first.", _
+                    vbCritical, "OpenAppointmentCopy")
+        Exit Sub
+    End If
+    
+    'Clean up
+    Set objOL = Nothing
+    Set objItem = Nothing
+    Set olAppt = Nothing
+    Set olApptCopy = Nothing
+    
+End Sub
+
